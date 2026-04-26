@@ -1,0 +1,432 @@
+# invent0ry.sh
+# 23-0327 15:00
+# 24-1217 19:00 UPDATE
+###############################################################
+# Параметры сценария
+#
+# Patronictl
+patronictl () {
+FILE=/usr/local/bin/patronictl
+if [ -e "$FILE" ]; then
+   /usr/local/bin/patronictl -c /etc/patroni/patroni.yml list
+else
+   echo "Patroni not installed"
+fi
+}
+#
+#
+# Postgresql
+psql_version () {
+FILE=/usr/bin/psql
+if [ -e "$FILE" ]; then
+    psql "postgresql://bi:bi@localhost/mi" -c "SELECT version()"
+else
+    echo "PostgreSQL interactive terminal not installed"
+fi
+}
+#
+psql_admconfigs () {
+FILE=/usr/bin/psql
+if [ -e "$FILE" ]; then
+    psql "postgresql://bi:bi@localhost/mi" -c "SELECT cfg_key, cfg_val, default_val FROM adm.configs ;"
+else
+    echo "PostgreSQL interactive terminal not installed"
+fi
+}
+#
+psql_db_size () {
+FILE=/usr/bin/psql
+if [ -e "$FILE" ]; then
+    psql "postgresql://bi:bi@localhost/mi" -c "SELECT datname, pg_size_pretty(pg_database_size(datname)) from pg_database ;"
+else
+    echo "PostgreSQL interactive terminal not installed"
+fi
+}
+#
+# detect the OS
+detectOS () {
+ID=$(cat /etc/os-release | grep ^ID= | tr -d 'ID="')
+
+if [ "$ID" == centos ]; then
+        detectOS="`cat /etc/centos-release`"
+elif [ "$ID" == astra ]; then
+        detectOS="`lsb_release -s -d | sed 's/"//g'`"
+elif [ "$ID" == redos ]; then
+        detectOS="`cat /etc/redos-release`"
+elif [ "$ID" == rocky ]; then
+        detectOS="`cat /etc/rocky-release`"
+else
+        detectOS="The installed OS is not defined"
+fi
+#return
+echo $detectOS
+}
+#
+# packages info
+packages_info () {
+ID=$(cat /etc/os-release | grep ^ID= | tr -d 'ID="')
+
+if [ "$ID" == centos ]; then 
+	cat <<- _EOF_
+	---------------------------------------------------------------
+	# /var/log/yum.log :
+	---------------------------------------------------------------
+	`ls -lht /var/log/yum.log*`
+
+	---------------------------------------------------------------
+	# cat /var/log/yum.log | grep 'keydb\|luxms\|postgres\|pgsql\|haproxy\|click\|keepalived\|jatoba\|nats'
+	---------------------------------------------------------------
+	`cat /var/log/yum.log* | grep 'keydb\|luxms\|postgres\|pgsql\|haproxy\|click\|keepalived\|jatoba\|nats'`
+
+	---------------------------------------------------------------
+	# rpm -qa | grep 'keydb\|luxms\|postgres\|pgsql\|haproxy\|click\|keepalived\|libreof\|jatoba\|nats' | sort
+	---------------------------------------------------------------
+	`rpm -qa | grep 'keydb\|luxms\|postgres\|pgsql\|haproxy\|click\|keepalived\|libreof\|jatoba\|nats' | sort`
+
+	---------------------------------------------------------------
+	# yum list installed | grep 'keydb\|luxms\|postgres\|pgsql\|haproxy\|click\|keepalived\|jatoba\|nats' | sort
+	---------------------------------------------------------------
+	`yum list installed | grep 'keydb\|luxms\|postgres\|pgsql\|haproxy\|click\|keepalived\|jatoba' | sort`
+
+	_EOF_
+elif [ "$ID" == astra ]; then 
+	cat <<- _EOF_
+	---------------------------------------------------------------
+	# /var/log/apt/history.log :
+	--------------------------------------------------------------
+	`ls -lht /var/log/apt/history.log*`
+
+	---------------------------------------------------------------
+	# apt list --installed | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort
+	---------------------------------------------------------------
+	`apt list --installed | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort`
+
+	---------------------------------------------------------------
+	# dpkg-query -l | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|nats-server\|nginx' | sort
+	---------------------------------------------------------------
+	`dpkg-query -l | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|nats-server\|nginx' | sort`
+
+	---------------------------------------------------------------
+	# cat /var/log/apt/history.log | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|nats-server'
+	---------------------------------------------------------------
+	`cat /var/log/apt/history.log | grep -E 'Install:.keydb*|Install:.luxms*|Install:.postgres*|Install:.pgsql*|Install:.pgpro*|Install:.haproxy*|Install:.click*|Install:.keepalived*|Install:.jatoba*|Install:.nats*'`
+
+	_EOF_
+elif [ "$ID" == redos ]; then 
+	cat <<- _EOF_
+	---------------------------------------------------------------
+	# /var/log/dnf.log :
+	---------------------------------------------------------------
+	`ls -lht /var/log/dnf.log*`
+
+	---------------------------------------------------------------
+	# cat /var/log/dnf.log | grep 'keydb\|luxms\|postgres\|pgsql\|haproxy\|click\|keepalived\|jatoba\|nats'
+	---------------------------------------------------------------
+	`cat /var/log/dnf.log* | grep -E 'DEBUG Installed:.keydb*|DEBUG Installed:.luxms*|DEBUG Installed:.postgres*|DEBUG Installed:.pgsql*|DEBUG Installed:.pgpro*|DEBUG Installed:.haproxy*|DEBUG Installed:.click*|DEBUG Installed:.keepalived*|DEBUG Installed:.jatoba*|DEBUG Installed:.nats*'`
+
+	---------------------------------------------------------------
+	# rpm -qa | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort
+	---------------------------------------------------------------
+	`rpm -qa | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort`
+
+	---------------------------------------------------------------
+	# dnf list installed | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort
+	---------------------------------------------------------------
+	`dnf list installed | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort`
+
+	_EOF_
+elif [ "$ID" == rocky ]; then 
+	cat <<- _EOF_
+	---------------------------------------------------------------
+	# /var/log/dnf.log :
+	---------------------------------------------------------------
+	`ls -lht /var/log/dnf.log*`
+
+	---------------------------------------------------------------
+	# cat /var/log/dnf.log | grep 'keydb\|luxms\|postgres\|pgsql\|haproxy\|click\|keepalived\|jatoba\|nats'
+	---------------------------------------------------------------
+	`cat /var/log/dnf.log* | grep -E 'DEBUG Installed:.keydb*|DEBUG Installed:.luxms*|DEBUG Installed:.postgres*|DEBUG Installed:.pgsql*|DEBUG Installed:.pgpro*|DEBUG Installed:.haproxy*|DEBUG Installed:.click*|DEBUG Installed:.keepalived*|DEBUG Installed:.jatoba*|DEBUG Installed:.nats*'`
+
+	---------------------------------------------------------------
+	# rpm -qa | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort
+	---------------------------------------------------------------
+	`rpm -qa | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort`
+
+	---------------------------------------------------------------
+	# dnf list installed | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort
+	---------------------------------------------------------------
+	`dnf list installed | grep 'keydb\|luxms\|postgres\|pgsql\|pgpro\|haproxy\|click\|keepalived\|libreoffice-calc\|jatoba\|^nats\|^nginx' | sort`
+
+	_EOF_
+else
+    echo "The package management system is not defined"
+fi
+return
+}
+#
+# repolist info
+repos_info() {
+#ID_LIKE=$(cat /etc/os-release | grep ^ID_LIKE | tr -d 'ID_LIKE="' | cut -d ' ' -f 1)
+ID=$(cat /etc/os-release | grep ^ID= | tr -d 'ID="')
+
+if [ "$ID" == centos ]; then 
+	cat <<- _EOF_
+	---------------------------------------------------------------
+	# yum repolist all
+	---------------------------------------------------------------
+	`yum repolist all`
+
+	---------------------------------------------------------------
+	# yum repolist enabled
+	---------------------------------------------------------------
+	`yum repolist enabled`
+
+	---------------------------------------------------------------
+	# ls /etc/yum.repos.d/luxmsbi.repo
+	---------------------------------------------------------------
+	`ls -lht /etc/yum.repos.d/luxmsbi.repo`
+
+	---------------------------------------------------------------
+	# grep /etc/yum.repos.d/luxmsbi.repo
+	---------------------------------------------------------------
+	`grep -v '^ *#\|^ *$' /etc/yum.repos.d/luxmsbi.repo | grep -wv password`
+
+	---------------------------------------------------------------
+	# yum list available luxms\* keydb\* nginx nodejs nats-\*
+	---------------------------------------------------------------
+	`yum list available luxms\* keydb\* nginx nodejs nats-\*`
+
+	_EOF_
+elif [ "$ID" == astra ]; then 
+	cat <<- _EOF_
+	---------------------------------------------------------------
+	# cat /etc/apt/sources.list
+	---------------------------------------------------------------
+	`cat /etc/apt/sources.list`
+
+	---------------------------------------------------------------
+	# cat /etc/apt/sources.list.d/luxmsbi.list
+	---------------------------------------------------------------
+	`cat /etc/apt/sources.list.d/luxmsbi.list`
+
+	---------------------------------------------------------------
+	# cat /etc/apt/auth.conf.d/luxmsbi.conf
+	---------------------------------------------------------------
+	`cat /etc/apt/auth.conf.d/luxmsbi.conf | grep -wv password`
+
+	---------------------------------------------------------------
+	# apt list luxms\* keydb\* nginx nodejs nats-\*
+	---------------------------------------------------------------
+	`apt list luxms\* keydb\* nginx nodejs nats\-*`
+
+	_EOF_
+elif [ "$ID" == redos ]; then 
+	cat <<- _EOF_
+	---------------------------------------------------------------
+	# dnf repolist all
+	---------------------------------------------------------------
+	`dnf repolist all`
+
+	---------------------------------------------------------------
+	# dnf repolist enabled
+	---------------------------------------------------------------
+	`dnf repolist enabled`
+
+	---------------------------------------------------------------
+	# ls /etc/yum.repos.d/luxmsbi.repo
+	---------------------------------------------------------------
+	`ls -lht /etc/yum.repos.d/luxmsbi.repo`
+
+	---------------------------------------------------------------
+	# grep /etc/yum.repos.d/luxmsbi.repo
+	---------------------------------------------------------------
+	`grep -v '^ *#\|^ *$' /etc/yum.repos.d/luxmsbi.repo | grep -wv password`
+
+	---------------------------------------------------------------
+	# dnf list available luxms\* keydb\* nginx nodejs nats-\*
+	---------------------------------------------------------------
+	`dnf list available luxms\* keydb\* nginx nodejs nats-\*`
+
+	_EOF_
+elif [ "$ID" == rocky ]; then 
+	cat <<- _EOF_
+	---------------------------------------------------------------
+	# dnf repolist all
+	---------------------------------------------------------------
+	`dnf repolist all`
+
+	---------------------------------------------------------------
+	# dnf repolist enabled
+	---------------------------------------------------------------
+	`dnf repolist enabled`
+
+	---------------------------------------------------------------
+	# ls /etc/yum.repos.d/luxmsbi.repo
+	---------------------------------------------------------------
+	`ls -lht /etc/yum.repos.d/luxmsbi.repo`
+
+	---------------------------------------------------------------
+	# grep /etc/yum.repos.d/luxmsbi.repo
+	---------------------------------------------------------------
+	`grep -v '^ *#\|^ *$' /etc/yum.repos.d/luxmsbi.repo | grep -wv password`
+
+	---------------------------------------------------------------
+	# dnf list available luxms\* keydb\* nginx nodejs nats-\*
+	---------------------------------------------------------------
+	`dnf list available luxms\* keydb\* nginx nodejs nats-\*`
+
+	_EOF_
+else
+    echo "The package management system is not defined"
+fi
+return
+}
+#
+#
+DATE=$(date '+%y%m%d-%H%M') #дата файла отчета
+#DATE=$(date '+%y%m%d') #дата файла отчета
+IP=`hostname -I`
+#
+# Time of day
+HOUR=$(date +"%H")
+if [ $HOUR -lt 12  -a $HOUR -ge 0 ]; then TIME="morning"
+elif [ $HOUR -lt 17 -a $HOUR -ge 12 ]; then TIME="afternoon"
+else TIME="evening"
+fi
+#
+# System uptime
+uptime=`cat /proc/uptime | cut -f1 -d.`
+upDays=$((uptime/60/60/24))
+upHours=$((uptime/60/60%24))
+upMins=$((uptime/60%60))
+#
+# System + Memory
+SYS_LOADS=`cat /proc/loadavg | awk '{print $1}'`
+ROOT=`df -Ph | grep root | awk '{print $3}' | tr -d '\n'`
+ROOTALL=`df -Ph | grep root | awk '{print $2}' | tr -d '\n'`
+ROOTPROC=`df -Ph | grep root | awk '{print $5}' | tr -d '\n'`
+MEMORY_USED=`free -b | grep Mem | awk '{print $3/$2 * 100.0}'`
+SWAP_USED=`free -b | grep Swap | awk '{print $3/$2 * 100.0}'`
+NUM_PROCS=`ps aux | wc -l`
+IPADDRESS=`hostname --all-ip-addresses`
+#RELEASE=`lsb_release -s -d | sed 's/"//g'`
+#
+############## Основной сценарий #################################
+#
+exec > ${HOSTNAME}_inv_$DATE.rpt #передача файла отчета в стандартный вывод
+#
+
+cat << _EOF_
+===============================================================
+ Good $TIME, ${USER}!                                          
+===============================================================
+Hostname        : `hostname -f`
+IP Address      : $IPADDRESS
+User            : ${USER}
+Release         : `detectOS`
+Kernel          : `uname -a | awk '{print $1" "$3" "$12}'`
+Users           : Currently `users | wc -w` user(s) logged on
+Server Time     : `date`
+System load     : $SYS_LOADS / $NUM_PROCS processes running
+Memory used %   : $MEMORY_USED
+Swap used %     : $SWAP_USED
+System uptime   : $upDays days $upHours hours $upMins minutes
+Disk space ROOT : $ROOT used ($ROOTPROC) from $ROOTALL
+
+===============================================================
+System Information Inventory
+===============================================================
+
+---------------------------------------------------------------
+# lscpu :
+---------------------------------------------------------------
+`lscpu`
+
+---------------------------------------------------------------
+# df -hT :
+---------------------------------------------------------------
+`df -hT`
+
+---------------------------------------------------------------
+# lsblk :
+---------------------------------------------------------------
+`lsblk`
+
+---------------------------------------------------------------
+# free -h :
+---------------------------------------------------------------
+`free -h`
+
+---------------------------------------------------------------
+# top -b -n 1 :
+---------------------------------------------------------------
+`top -b -n 1`
+
+===============================================================
+
+---------------------------------------------------------------
+# systemctl status keydb postgres\* luxms\* nats\* :
+---------------------------------------------------------------
+`systemctl status keydb postgres\* luxms\* nats\*`
+
+---------------------------------------------------------------
+# systemctl list-units|grep 'keydb\|luxms\|postgres\|nats' :
+---------------------------------------------------------------
+`systemctl list-units|grep 'keydb\|luxms\|postgres\|nats'`
+
+===============================================================
+ Luxms BI (packages) Information Inventory
+===============================================================
+
+`packages_info`
+
+===============================================================
+ PostgreSQL Information Inventory
+===============================================================
+
+---------------------------------------------------------------
+# psql SELECT version :
+---------------------------------------------------------------
+`psql_version`
+
+---------------------------------------------------------------
+# psql SELECT adm.configs :
+---------------------------------------------------------------
+`psql_admconfigs`
+
+---------------------------------------------------------------
+# psql SELECT pg_database_size :
+---------------------------------------------------------------
+`psql_db_size`
+
+---------------------------------------------------------------
+# /usr/local/bin/patronictl -c /etc/patroni/patroni.yml list
+---------------------------------------------------------------
+`patronictl`
+
+===============================================================
+ Network Information Inventory
+===============================================================
+
+---------------------------------------------------------------
+# ss -tulpn
+---------------------------------------------------------------
+`ss -tulpn`
+
+---------------------------------------------------------------
+# netstat -tulpn
+---------------------------------------------------------------
+`netstat -tulpn`
+
+---------------------------------------------------------------
+# iptables -nL
+---------------------------------------------------------------
+`iptables -nL`
+
+===============================================================
+ Repository Information Inventory
+===============================================================
+
+`repos_info`
+
+_EOF_
