@@ -1,0 +1,27 @@
+#!/bin/bash
+SESSION="0"
+WINDOW_NAME="main"
+
+# Start tmux
+tmux start-server
+
+# Create a new tmux session
+tmux new-session -d -s $SESSION -n $WINDOW_NAME
+
+# Create 3 panels
+tmux selectp -t 0
+tmux splitw -h -p 35
+
+tmux selectp -t 1
+tmux splitw -v -p 30
+
+# Exec command in panel #0
+tmux selectp -t 0
+tmux send-keys "htop" C-m
+
+# Exec command in panel #1
+tmux selectp -t 1
+tmux send-keys "top" C-m
+
+# Attach to created session
+tmux attach-session -t $SESSION
