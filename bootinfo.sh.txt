@@ -1,0 +1,14 @@
+#!/bin/bash
+
+date=`date +%Y%m%d-%H%M`
+HOST=`hostname -s`
+IP=`hostname -I`
+UP=`uptime | cut -d" " -f4,5 | cut -d"," -f1`
+LOAD=`uptime | cut -d":" -f5,6`
+MEM=`ps aux | awk '{ sum += $4 }; END { print sum }'`
+CPU=`ps aux | awk '{ sum += $3 }; END { print sum }'`
+SB=`who -b`
+
+tweet="host: ${HOST} ip: ${IP} ${SB} uptime: ${UP}"
+
+echo $tweet | mail -s "bootinfo for host ${HOST} ${IP}" vgrchkn@lux.ru
