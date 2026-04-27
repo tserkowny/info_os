@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+HOST=$1
+PORT=$2
+ 
+nc -vz ${HOST} ${PORT}
+if [ $? -eq 0 ]
+then
+        echo "Port is open"
+else
+        echo "Port is closed"
+fi
