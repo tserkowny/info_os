@@ -1,5 +1,5 @@
 #!/bin/bash
-# Program name: pinger.sh
+# Name: pinger.sh
 date
 cat ./list.txt |  while read output
 do
