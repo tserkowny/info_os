@@ -11,4 +11,4 @@ SB=`who -b`
 
 tweet="host: ${HOST} ip: ${IP} ${SB} uptime: ${UP}"
 
-echo $tweet | mail -s "bootinfo for host ${HOST} ${IP}" vgrchkn@lux.ru
+echo $tweet | mail -s "bootinfo for host ${HOST} ${IP}" tserkowny@gmail.com
