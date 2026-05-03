@@ -2,7 +2,7 @@
 
 ## check-port
 ```
-sh check-port.sh rmr-etl-1 8200
+sh check-port.sh etl-1 8200
 ```
 
 ## inventory
