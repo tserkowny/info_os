@@ -1,4 +1,5 @@
 #!/bin/bash
+# Name: tmux.sh
 SESSION="0"
 WINDOW_NAME="main"
 
