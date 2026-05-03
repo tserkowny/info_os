@@ -15,9 +15,7 @@ sh check-port.sh rmr-etl-1 8200
 
 ```
 cd existing_repo
-git remote add origin https://gito.lux.com/vgrchkn/inventory.git
+git remote add origin git@github.com:tserkowny/info_os.git
 git branch -M main
 git push -uf origin main
 ```
-
-## Integrate with your tools
